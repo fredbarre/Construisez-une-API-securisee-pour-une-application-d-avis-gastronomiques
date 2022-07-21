@@ -6,6 +6,7 @@ dotenv.config();
 const userModel = require("./models/user.js");
 
 const DBPASSWORD = process.env.DBPASSWORD;
+const hash = require("password-hash");
 /*console.log(
   `mongodb+srv://DatabaseUser:${DBPASSWORD}@cluster0.3nenbtk.mongodb.net/test`
 );*/
@@ -19,7 +20,10 @@ mongoose.connect(
 );
 
 //let userModel = mongoose.model("user", userSchema);
-let user = new userModel({ username: "bob", email: "bob@mail.com" });
+let password = "pass";
+password = hash.generate(password);
+let email = "bob@mail.com";
+let user = new userModel({ password: password, email: email });
 
 user.save(function (err) {
   if (err) {
@@ -27,7 +31,7 @@ user.save(function (err) {
   }
   console.log("utilisateur ajouté avec succès !");
 });
-
+/*
 app.post("/api/stuff", (req, res, next) => {
   delete req.body._id;
   const thing = new Thing({
@@ -38,7 +42,7 @@ app.post("/api/stuff", (req, res, next) => {
     .then(() => res.status(201).json({ message: "Objet enregistré !" }))
     .catch((error) => res.status(400).json({ error }));
   next();
-});
+});*/
 
 app.use((req, res, next) => {
   console.log("Requête reçue !");
