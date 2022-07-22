@@ -7,6 +7,7 @@ const userModel = require("./models/user.js");
 
 const DBPASSWORD = process.env.DBPASSWORD;
 const hash = require("password-hash");
+const bcrypt = require("bcrypt");
 /*console.log(
   `mongodb+srv://DatabaseUser:${DBPASSWORD}@cluster0.3nenbtk.mongodb.net/test`
 );*/
@@ -19,7 +20,7 @@ mongoose.connect(
   }
 );
 
-//let userModel = mongoose.model("user", userSchema);
+//let userModels = mongoose.model("user", userSchema);
 let password = "pass";
 password = hash.generate(password);
 let email = "bob@mail.com";
@@ -31,6 +32,15 @@ user.save(function (err) {
   }
   console.log("utilisateur ajouté avec succès !");
 });
+
+userModel.find(null, function (err, user) {
+  if (err) {
+    throw err;
+  }
+
+  console.log(user);
+});
+
 /*
 app.post("/api/stuff", (req, res, next) => {
   delete req.body._id;
