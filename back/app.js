@@ -3,56 +3,35 @@ const app = express();
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 dotenv.config();
-const userModel = require("./models/user.js");
+const userModel = require("./models/userModel.js");
+const userRoutes = require("./routes/userRoute");
 
-const DBPASSWORD = process.env.DBPASSWORD;
-const hash = require("password-hash");
+const DBLINK = process.env.DBLINK;
 const bcrypt = require("bcrypt");
-/*console.log(
-  `mongodb+srv://DatabaseUser:${DBPASSWORD}@cluster0.3nenbtk.mongodb.net/test`
-);*/
-mongoose.connect(
-  `mongodb+srv://DatabaseUser:${DBPASSWORD}@cluster0.3nenbtk.mongodb.net/test`,
-  function (err) {
-    if (err) {
-      throw err;
-    }
-  }
-);
 
-//let userModels = mongoose.model("user", userSchema);
-let password = "pass";
-password = hash.generate(password);
-let email = "bob@mail.com";
-let user = new userModel({ password: password, email: email });
-
-user.save(function (err) {
+mongoose.connect(DBLINK, function (err) {
   if (err) {
     throw err;
   }
-  console.log("utilisateur ajouté avec succès !");
 });
 
-userModel.find(null, function (err, user) {
-  if (err) {
-    throw err;
-  }
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-  console.log(user);
-});
-
-/*
-app.post("/api/stuff", (req, res, next) => {
-  delete req.body._id;
-  const thing = new Thing({
-    ...req.body,
-  });
-  thing
-    .save()
-    .then(() => res.status(201).json({ message: "Objet enregistré !" }))
-    .catch((error) => res.status(400).json({ error }));
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content, Accept, Content-Type, Authorization"
+  );
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, DELETE, PATCH, OPTIONS"
+  );
   next();
-});*/
+});
+
+app.use("/", userRoutes);
 
 app.use((req, res, next) => {
   console.log("Requête reçue !");
@@ -72,4 +51,7 @@ app.use((req, res, next) => {
 app.use((req, res, next) => {
   console.log("Réponse envoyée avec succès !");
 });
+
+app.use(".", userRoutes);
+
 module.exports = app;
