@@ -20,32 +20,33 @@ exports.signup = function (req, res) {
     .catch((error) => res.status(500).json({ error }));
 };
 
-exports.login = function (req, res) {
-  
-  userModel
+exports.login = async function (req, res) {
+  let user = await userModel
     .findOne({ email: req.body.email })
-    .then((user) => {
-      if (!user) {
-        return res
-          .status(401)
-          .json({ message: "Paire login/mot de passe incorrecte" });
-      }
-      bcrypt
-        .compare(req.body.password, user.password)
-        .then((valid) => {
-          if (!valid) {
-            return res
-              .status(401)
-              .json({ message: "Paire login/mot de passe incorrecte" });
-          }
-          res.status(200).json({
-            userId: user._id,
-            token: jwt.sign({ userId: user._id }, TOKENSECRET, {
-              expiresIn: "24h"
-            })
-          });
-        })
-        .catch((error) => res.status(500).json({ error }));
-    })
-    .catch((error) => res.status(500).json({ error }));
+    .catch((error) => {
+      throw res.status(500).json({ error });
+    });
+
+  if (!user) {
+    return res
+      .status(401)
+      .json({ message: "Paire login/mot de passe incorrecte" });
+  }
+  let valid = await bcrypt
+    .compare(req.body.password, user.password)
+    .catch((error) => {
+      throw res.status(500).json({ error });
+    });
+
+  if (!valid) {
+    return res
+      .status(401)
+      .json({ message: "Paire login/mot de passe incorrecte" });
+  }
+  const userId = user._id;
+
+  res.status(200).json({
+    userId,
+    token: jwt.sign({ userId }, TOKENSECRET, { expiresIn: "24h" }),
+  });
 };

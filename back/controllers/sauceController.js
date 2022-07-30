@@ -1,6 +1,6 @@
 const mongodb = require("../managers/mongoDB");
 
-let sauce_Controller = require("../models/sauceModel");
+let sauceModel = require("../models/sauceModel");
 
 exports.getSauces = function (req, res) { };
 
