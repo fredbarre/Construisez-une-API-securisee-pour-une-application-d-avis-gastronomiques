@@ -20,6 +20,8 @@ app.use(morgan("dev", { immediate: false }));
 app.use(morgan("dev", { immediate: true }));
 app.use(require("./middlewares/cors"));
 app.use("/", require("./routes/userRoute"));
+app.use("/", require("./routes/sauceRoute"));
+//app.use("/images", express.static(path.join(__dirname, "images")));
 app.use("/test", require("./routes/testRoute")); //test route auth
 app.use(require("./middlewares/error"));
 
