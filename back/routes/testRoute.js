@@ -6,6 +6,6 @@ router.get("/auth", auth, (req, res) => {
   res.status(201).json(req.auth);
 });
 
-//router.get("/", user_controller.login);
+//router.get("/multer", user_controller.login);
 
 module.exports = router;
