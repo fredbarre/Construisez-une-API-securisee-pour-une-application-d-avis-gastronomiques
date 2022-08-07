@@ -1,8 +1,13 @@
 let userModel = require("../models/userModel");
 const bcrypt = require("bcrypt");
 const mongodb = require("../managers/mongoDB");
-const jwt = require("jsonwebtoken");
-const TOKENSECRET = process.env.TOKENSECRET;
+//const jwt = require("jsonwebtoken");
+const jwt = require("../managers/jwt");
+
+let env = require("../managers/env");
+if (!env.TOKENSECRET) console.log("TOKENSECRET must be set in .env");
+const { TOKENSECRET } = env;
+//const TOKENSECRET = process.env.TOKENSECRET;
 
 exports.signup = async function (req, res) {
   try {
@@ -49,6 +54,6 @@ exports.login = async function (req, res) {
 
   res.status(200).json({
     userId,
-    token: jwt.sign({ userId }, TOKENSECRET, { expiresIn: "24h" }),
+    token: jwt.sign({ userId }),
   });
 };
