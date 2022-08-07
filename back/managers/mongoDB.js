@@ -1,6 +1,8 @@
 const mongoose = require("mongoose");
 
-const DBLINK = process.env.DBLINK;
+let env = require("../managers/env");
+if (!env.DBLINK) throw new Error("DBLINK must be set in .env");
+const DBLINK = env.DBLINK;
 
 const statusDB = mongoose.connect(DBLINK, function (err) {
   if (err) {
