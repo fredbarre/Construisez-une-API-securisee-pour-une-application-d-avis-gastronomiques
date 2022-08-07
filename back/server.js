@@ -1,7 +1,14 @@
 const http = require("http");
 const app = require("./app");
 
-app.set("port", process.env.PORT || 3000);
+const env = require("./managers/env");
+if (!env.PORT) console.log("PORT should be set in .env");
+const { PORT = 3000 } = env;
+//const PORT = process.env.PORT || 3000;
+
+app.set("port", PORT);
 const server = http.createServer(app);
 
-server.listen(process.env.PORT || 3000);
+server.listen(PORT, () => {
+  console.log(`Server listen on http://localhost:${PORT}/`);
+});
