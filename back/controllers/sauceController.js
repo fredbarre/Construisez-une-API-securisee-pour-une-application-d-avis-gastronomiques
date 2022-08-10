@@ -1,12 +1,15 @@
 const mongodb = require("../managers/mongoDB");
 
+const jwt = require("../managers/jwt");
 let sauceModel = require("../models/sauceModel");
 
 exports.getSauces = async function (req, res) {
   try {
+    console.log("getSauces");
     let sauces = await sauceModel.find();
-    //console.log(sauce);
-    res.status(200).json({ sauces });
+    console.log(sauces);
+    res.status(200).json(sauces);
+    //res.status(200).json()
   } catch (error) {
     res.status(400).json({ error });
   }
@@ -15,53 +18,54 @@ exports.getSauces = async function (req, res) {
 exports.getSauce = async function (req, res) {
   try {
     let sauce = await sauceModel.findOne({ _id: req.params.id });
-    res.status(200).json({ sauce });
-    //console.log(sauce);
+    res.status(200).json(sauce);
+    /*console.log("sauce \n" + sauce);
+    console.log("stringify sauce \n" + JSON.stringify(sauce));*/
   } catch (error) {
     res.status(400).json({ error });
   }
 };
 
 exports.newSauce = function (req, res) {
-  console.log("authid:" + req.auth._id);
-  console.log("reqid" + req.body.userId); /*
-  if (req.auth._id != req.body.userId) {
-    res.status(403).json({ error: "requete non autorisée" });
-    return;
-  }*/
-  /*console.log(req);
+  //console.log("text? " + JSON.stringify(req.body));
+  //if (req.auth._id != req.body.userId) {
+  //  res.status(403).json({ error: "requete non autorisée" });
+  //  return;
+
   const sauceObject = JSON.parse(req.body.sauce);
-  delete sauceObjetct._id;*/
+  console.log("sauceobject " + sauceObject);
+  console.log("req.file " + req.file);
+  delete sauceObject._id;
+
   const sauce = new sauceModel({
-    /*...sauceObject,
-    likes: 0,
-    dislikes: 0,
-    userLiked: [],
-    usersDisliked: [],*/
-    userId: req.body.userId,
-    name: req.body.name,
-    manufacturer: req.body.manufacturer,
-    description: req.body.description,
-    mainPepper: req.body.mainPepper,
-    imageUrl: req.body.imageUrl,
-    heat: req.body.heat,
+    ...sauceObject,
     likes: 0,
     dislikes: 0,
     userLiked: [],
     usersDisliked: [],
+    imageUrl: "http://localhost:3000/" + req.file.filename,
   });
+
+  console.log("sauce " + sauce);
   sauce
     .save()
     .then(() => res.status(201).json({ message: "sauce créé !" }))
     .catch((error) => res.status(400).json({ error }));
 };
 
-exports.updateSauce = function (req, res) {};
+exports.updateSauce = function (req, res) {
+  let sauce = req.file ? JSON.parse(req.body.sauce) : req.body.sauce;
+};
 
 exports.deleteSauce = async function (req, res) {
   try {
+    const token = req.headers.authorization.split(" ")[1];
+    const decodedToken = jwt.verify(token);
+    const userId = decodedToken.userId;
+    //console.log("T= " + token + " D= " + decodedToken + " U= " + userId);
+
     let sauce = await sauceModel.findOne({ _id: req.params.id });
-    if (req.auth._id != req.body.userId || sauce.userId != req.body.userId) {
+    if (sauce.userId != userId) {
       res.status(403).json({ error: "requete non autorisée" });
       return;
     }
@@ -75,18 +79,22 @@ exports.deleteSauce = async function (req, res) {
 
 exports.setLike = async function (req, res) {
   try {
-    /*if (req.auth._id != req.body.userId) {
-      res.status(403).json({ error: "requete non autorisée" });
-      return;
-    }*/
-
     let choice = req.body.like;
     console.log(choice);
     if (!(choice == -1 || choice == 0 || choice == 1)) {
       res.status(400).json({ error: "choix like dislike non valide" });
       return;
     }
+
+    const token = req.headers.authorization.split(" ")[1];
+    const decodedToken = jwt.verify(token);
+    const userId = decodedToken.userId;
+    if (userId != req.body.userId)
+      return res.status(403).json({ error: "requete non autorisée" });
     let sauce = await sauceModel.findOne({ _id: req.params.id });
+
+    if (userId != sauce.userId)
+      return res.status(403).json({ error: "requete non autorisée" });
     //console.log(sauce);
     //console.log(req.body.userId);
     //console.log(sauce.usersLiked);
