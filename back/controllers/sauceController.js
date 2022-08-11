@@ -1,13 +1,14 @@
 const mongodb = require("../managers/mongoDB");
+const fs = require("fs");
 
 const jwt = require("../managers/jwt");
 let sauceModel = require("../models/sauceModel");
 
 exports.getSauces = async function (req, res) {
   try {
-    console.log("getSauces");
+    //console.log("getSauces");
     let sauces = await sauceModel.find();
-    console.log(sauces);
+    //console.log(sauces);
     res.status(200).json(sauces);
     //res.status(200).json()
   } catch (error) {
@@ -53,8 +54,64 @@ exports.newSauce = function (req, res) {
     .catch((error) => res.status(400).json({ error }));
 };
 
-exports.updateSauce = function (req, res) {
-  let sauce = req.file ? JSON.parse(req.body.sauce) : req.body.sauce;
+exports.updateSauce = async function (req, res) {
+  const token = req.headers.authorization.split(" ")[1];
+  const decodedToken = jwt.verify(token);
+  const userId = decodedToken.userId;
+  //console.log("T= " + token + " D= " + decodedToken + " U= " + userId);
+
+  //sauce = req.file ? JSON.parse(req.body.sauce) : req.body.sauce;
+  //let sauce = await sauceModel.findOne({ _id: req.params.id });
+
+  console.log("req.file" + req.file);
+  let sauce;
+  if (req.file == undefined) {
+    if (req.body.userId != userId) {
+      res.status(403).json({ error: "requete non autorisée" });
+      return;
+    }
+    console.log("id " + req.params.id);
+    await sauceModel.updateOne(
+      { _id: req.params.id },
+      {
+        userId: req.body.userId,
+        name: req.body.name,
+        manufacturer: req.body.manufacturer,
+        description: req.body.description,
+        mainPepper: req.body.mainPepper,
+        heat: req.body.heat,
+        likes: 0,
+        dislikes: 0,
+        userLiked: [],
+        usersDisliked: [],
+      }
+    );
+  } else {
+    sauce = JSON.parse(req.body.sauce);
+    if (sauce.userId != userId) {
+      res.status(403).json({ error: "requete non autorisée" });
+      return;
+    }
+
+    await sauceModel.updateOne(
+      { _id: req.params.id },
+      {
+        userId: sauce.userId,
+        name: sauce.name,
+        manufacturer: sauce.manufacturer,
+        description: sauce.description,
+        mainPepper: sauce.mainPepper,
+        heat: sauce.heat,
+        likes: 0,
+        dislikes: 0,
+        userLiked: [],
+        usersDisliked: [],
+        imageUrl: "http://localhost:3000/" + req.file.filename,
+      }
+    );
+  }
+  //console.log("sauce " + sauce);
+  return res.status(200).json({ message: "sauce mise a jour" });
 };
 
 exports.deleteSauce = async function (req, res) {
@@ -69,6 +126,16 @@ exports.deleteSauce = async function (req, res) {
       res.status(403).json({ error: "requete non autorisée" });
       return;
     }
+    /*fs.unlink("../images/1660127186008.jpg", (err) => {
+      if (err) {
+        return res.status(500).send({
+          message: "Could not delete the file. " + err,
+        });
+      }
+      return res.status(200).send({
+        message: "File is deleted.",
+      });
+    });*/
     await sauceModel.deleteOne({ _id: req.params.id });
     res.status(200).json({ message: "sauce supprimée" });
     //console.log(sauce);
@@ -98,12 +165,12 @@ exports.setLike = async function (req, res) {
     //console.log(sauce);
     //console.log(req.body.userId);
     //console.log(sauce.usersLiked);
-    let like = sauce.usersLiked.indexOf(req.body.userId);
+    let liked = sauce.usersLiked.indexOf(req.body.userId) != -1;
 
-    let dislike = sauce.usersDisliked.indexOf(req.body.userId);
-    //console.log(like + " d " + dislike);
-    if (like != -1 && choice != 1) {
-      console.log("change like");
+    let disliked = sauce.usersDisliked.indexOf(req.body.userId) != -1;
+    console.log("liked= " + liked + " disliked " + disliked);
+    if (liked) {
+      console.log("remove like");
       await sauceModel.updateOne(
         { _id: req.params.id },
         {
@@ -113,22 +180,10 @@ exports.setLike = async function (req, res) {
           $pull: { usersLiked: req.body.userId },
         }
       );
-      if (choice == -1)
-        await sauceModel.updateOne(
-          { _id: req.params.id },
-          {
-            ...req.body,
-            dislikes: sauce.dislikes + 1,
-            //usersDisliked: sauce.usersDisliked.push(req.body.userId),
-            $push: { usersDisliked: req.body.userId },
-          }
-        );
-      console.log(await sauceModel.findOne({ _id: req.params.id }));
-      res.status(200).json({ message: "sauce mise a jour" });
-      return;
     }
-    if (dislike != -1 && choice != -1) {
-      console.log("change dislike");
+
+    if (disliked) {
+      console.log("remove dislike");
       await sauceModel.updateOne(
         { _id: req.params.id },
         {
@@ -138,48 +193,36 @@ exports.setLike = async function (req, res) {
           $pull: { usersDisliked: req.body.userId },
         }
       );
-      if (choice == 1)
-        await sauceModel.updateOne(
-          { _id: req.params.id },
-          {
-            ...req.body,
-            likes: sauce.likes + 1,
-            //usersLiked: sauce.usersLiked.push(req.body.userId),
-            $push: { usersLiked: req.body.userId },
-          }
-        );
-      console.log(await sauceModel.findOne({ _id: req.params.id }));
-      res.status(200).json({ message: "sauce mise a jour" });
-      return;
     }
-    if (like == -1 && dislike == -1 && choice != 0) {
-      console.log("set like/dislike");
-      if (choice == 1)
-        await sauceModel.updateOne(
-          { _id: req.params.id },
-          {
-            ...req.body,
-            likes: sauce.likes + 1,
-            //usersLiked: sauce.usersLiked.push(req.body.userId),
-            $push: { usersLiked: req.body.userId },
-          }
-        );
-      if (choice == -1)
-        await sauceModel.updateOne(
-          { _id: req.params.id },
-          {
-            ...req.body,
-            dislikes: sauce.dislikes + 1,
-            //usersDisliked: sauce.usersDisliked.push(req.body.userId),
-            $push: { usersDisliked: req.body.userId },
-          }
-        );
-      console.log(await sauceModel.findOne({ _id: req.params.id }));
-      res.status(200).json({ message: "Like mis a jour" });
-      return;
+
+    if (choice == 1) {
+      console.log("add like");
+      await sauceModel.updateOne(
+        { _id: req.params.id },
+        {
+          ...req.body,
+          likes: sauce.likes + 1,
+          //usersLiked: sauce.usersLiked.push(req.body.userId),
+          $push: { usersLiked: req.body.userId },
+        }
+      );
+    }
+
+    if (choice == -1) {
+      console.log("add dislike");
+      await sauceModel.updateOne(
+        { _id: req.params.id },
+        {
+          ...req.body,
+          dislikes: sauce.dislikes + 1,
+          //usersDisliked: sauce.usersDisliked.push(req.body.userId),
+          $push: { usersDisliked: req.body.userId },
+        }
+      );
     }
     console.log(await sauceModel.findOne({ _id: req.params.id }));
-    res.status(200).json({ message: "pas de changement de Like sauce" });
+    res.status(200).json({ message: "Like mis a jour" });
+    return;
   } catch (error) {
     res.status(400).json({ error });
   }
