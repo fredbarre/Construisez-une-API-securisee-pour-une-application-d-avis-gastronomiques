@@ -160,8 +160,6 @@ exports.setLike = async function (req, res) {
       return res.status(403).json({ error: "requete non autorisée" });
     let sauce = await sauceModel.findOne({ _id: req.params.id });
 
-    if (userId != sauce.userId)
-      return res.status(403).json({ error: "requete non autorisée" });
     //console.log(sauce);
     //console.log(req.body.userId);
     //console.log(sauce.usersLiked);
@@ -174,7 +172,7 @@ exports.setLike = async function (req, res) {
       await sauceModel.updateOne(
         { _id: req.params.id },
         {
-          ...req.body,
+          //...req.body,
           likes: sauce.likes - 1,
           //usersLiked: sauce.usersLiked.splice(like, 1),
           $pull: { usersLiked: req.body.userId },
@@ -187,7 +185,7 @@ exports.setLike = async function (req, res) {
       await sauceModel.updateOne(
         { _id: req.params.id },
         {
-          ...req.body,
+          //...req.body,
           dislikes: sauce.dislikes - 1,
           //usersDisliked: sauce.usersDisliked.splice(dislike, 1),
           $pull: { usersDisliked: req.body.userId },
@@ -200,7 +198,7 @@ exports.setLike = async function (req, res) {
       await sauceModel.updateOne(
         { _id: req.params.id },
         {
-          ...req.body,
+          //...req.body,
           likes: sauce.likes + 1,
           //usersLiked: sauce.usersLiked.push(req.body.userId),
           $push: { usersLiked: req.body.userId },
@@ -213,14 +211,14 @@ exports.setLike = async function (req, res) {
       await sauceModel.updateOne(
         { _id: req.params.id },
         {
-          ...req.body,
+          //...req.body,
           dislikes: sauce.dislikes + 1,
           //usersDisliked: sauce.usersDisliked.push(req.body.userId),
           $push: { usersDisliked: req.body.userId },
         }
       );
     }
-    console.log(await sauceModel.findOne({ _id: req.params.id }));
+    //console.log(await sauceModel.findOne({ _id: req.params.id }));
     res.status(200).json({ message: "Like mis a jour" });
     return;
   } catch (error) {
