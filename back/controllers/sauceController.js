@@ -1,6 +1,9 @@
 const mongodb = require("../managers/mongoDB");
 const fs = require("fs");
 
+const env = require("../managers/env");
+if (!env.PORT) console.log("PORT should be set in .env");
+const { PORT = 3000 } = env;
 const jwt = require("../managers/jwt");
 let sauceModel = require("../models/sauceModel");
 
@@ -44,7 +47,7 @@ exports.newSauce = function (req, res) {
     dislikes: 0,
     userLiked: [],
     usersDisliked: [],
-    imageUrl: "http://localhost:3000/" + req.file.filename,
+    imageUrl: `http://localhost:${PORT}/` + req.file.filename,
   });
 
   console.log("sauce " + sauce);
@@ -106,7 +109,7 @@ exports.updateSauce = async function (req, res) {
         dislikes: 0,
         userLiked: [],
         usersDisliked: [],
-        imageUrl: "http://localhost:3000/" + req.file.filename,
+        imageUrl: `http://localhost:${PORT}/` + req.file.filename,
       }
     );
   }
@@ -158,7 +161,8 @@ exports.setLike = async function (req, res) {
     const userId = decodedToken.userId;
     if (userId != req.body.userId)
       return res.status(403).json({ error: "requete non autorisée" });
-    let sauce = await sauceModel.findOne({ _id: req.params.id });
+    let sauceId = req.params.id;
+    let sauce = await sauceModel.findOne({ _id: sauceId });
 
     //console.log(sauce);
     //console.log(req.body.userId);
@@ -170,7 +174,7 @@ exports.setLike = async function (req, res) {
     if (liked) {
       console.log("remove like");
       await sauceModel.updateOne(
-        { _id: req.params.id },
+        { _id: sauceId },
         {
           //...req.body,
           likes: sauce.likes - 1,
@@ -183,7 +187,7 @@ exports.setLike = async function (req, res) {
     if (disliked) {
       console.log("remove dislike");
       await sauceModel.updateOne(
-        { _id: req.params.id },
+        { _id: sauceId },
         {
           //...req.body,
           dislikes: sauce.dislikes - 1,
@@ -196,7 +200,7 @@ exports.setLike = async function (req, res) {
     if (choice == 1) {
       console.log("add like");
       await sauceModel.updateOne(
-        { _id: req.params.id },
+        { _id: sauceId },
         {
           //...req.body,
           likes: sauce.likes + 1,
@@ -209,7 +213,7 @@ exports.setLike = async function (req, res) {
     if (choice == -1) {
       console.log("add dislike");
       await sauceModel.updateOne(
-        { _id: req.params.id },
+        { _id: sauceId },
         {
           //...req.body,
           dislikes: sauce.dislikes + 1,
