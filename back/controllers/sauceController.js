@@ -1,5 +1,6 @@
 const mongodb = require("../managers/mongoDB");
 const fs = require("fs");
+const fsPromises = require("fs").promises;
 
 const env = require("../managers/env");
 if (!env.PORT) console.log("PORT should be set in .env");
@@ -95,6 +96,11 @@ exports.updateSauce = async function (req, res) {
       res.status(403).json({ error: "requete non autorisée" });
       return;
     }
+    let oldsauce = await sauceModel.findOne({ _id: req.params.id });
+
+    let fileLink = oldsauce.imageUrl.split("/");
+    let fileName = fileLink[fileLink.length - 1];
+    await fsPromises.unlink("images/" + fileName);
 
     await sauceModel.updateOne(
       { _id: req.params.id },
@@ -129,16 +135,10 @@ exports.deleteSauce = async function (req, res) {
       res.status(403).json({ error: "requete non autorisée" });
       return;
     }
-    /*fs.unlink("../images/1660127186008.jpg", (err) => {
-      if (err) {
-        return res.status(500).send({
-          message: "Could not delete the file. " + err,
-        });
-      }
-      return res.status(200).send({
-        message: "File is deleted.",
-      });
-    });*/
+    let fileLink = sauce.imageUrl.split("/");
+    let fileName = fileLink[fileLink.length - 1];
+    await fsPromises.unlink("images/" + fileName);
+
     await sauceModel.deleteOne({ _id: req.params.id });
     res.status(200).json({ message: "sauce supprimée" });
     //console.log(sauce);
