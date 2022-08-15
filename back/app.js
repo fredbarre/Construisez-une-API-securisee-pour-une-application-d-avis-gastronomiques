@@ -1,20 +1,10 @@
 const express = require("express");
 require("express-async-errors");
 
-//const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 dotenv.config();
 const morgan = require("morgan");
 
-/*
-const DBLINK = process.env.DBLINK;
-
-mongoose.connect(DBLINK, function (err) {
-  if (err) {
-    throw err;
-  }
-});
-*/
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

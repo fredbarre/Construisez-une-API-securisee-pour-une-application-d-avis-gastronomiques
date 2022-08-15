@@ -10,4 +10,3 @@ userSchema.plugin(uniqueValidator);
 
 let userModel = mongoose.model("user", userSchema);
 module.exports = userModel;
-//module.exports = mongoose.model("Thing", user);

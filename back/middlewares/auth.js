@@ -1,6 +1,4 @@
-//const jwt = require('jsonwebtoken');
 const jwt = require("../managers/jwt");
-//const TOKENSECRET = process.env.TOKENSECRET;
 
 module.exports = (req, res, next) => {
   try {

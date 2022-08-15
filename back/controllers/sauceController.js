@@ -1,5 +1,4 @@
 const mongodb = require("../managers/mongoDB");
-const fs = require("fs");
 const fsPromises = require("fs").promises;
 
 const env = require("../managers/env");
@@ -11,11 +10,8 @@ let joischema = require("../managers/joivalidator");
 
 exports.getSauces = async function (req, res) {
   try {
-    //console.log("getSauces");
     let sauces = await sauceModel.find();
-    //console.log(sauces);
     res.status(200).json(sauces);
-    //res.status(200).json()
   } catch (error) {
     res.status(400).json({ error });
   }
@@ -25,18 +21,12 @@ exports.getSauce = async function (req, res) {
   try {
     let sauce = await sauceModel.findOne({ _id: req.params.id });
     res.status(200).json(sauce);
-    /*console.log("sauce \n" + sauce);
-    console.log("stringify sauce \n" + JSON.stringify(sauce));*/
   } catch (error) {
     res.status(400).json({ error });
   }
 };
 
 exports.newSauce = function (req, res) {
-  //console.log("text? " + JSON.stringify(req.body));
-  //if (req.auth._id != req.body.userId) {
-  //  res.status(403).json({ error: "requete non autorisée" });
-  //  return;
   try {
     const sauceObject = JSON.parse(req.body.sauce);
 
@@ -46,12 +36,8 @@ exports.newSauce = function (req, res) {
       description: sauceObject.description,
       mainPepper: sauceObject.mainPepper,
     });
-    console.log("error");
-    console.log(error);
     if (error != undefined) throw new Error("error");
 
-    console.log("sauceobject " + sauceObject);
-    console.log("req.file " + req.file);
     delete sauceObject._id;
 
     const sauce = new sauceModel({
@@ -63,7 +49,6 @@ exports.newSauce = function (req, res) {
       imageUrl: `http://localhost:${PORT}/` + req.file.filename,
     });
 
-    console.log("sauce " + sauce);
     sauce.save();
     return res.status(201).json({ message: "sauce créé !" });
   } catch (error) {
@@ -76,12 +61,7 @@ exports.updateSauce = async function (req, res) {
     const token = req.headers.authorization.split(" ")[1];
     const decodedToken = jwt.verify(token);
     const userId = decodedToken.userId;
-    //console.log("T= " + token + " D= " + decodedToken + " U= " + userId);
 
-    //sauce = req.file ? JSON.parse(req.body.sauce) : req.body.sauce;
-    //let sauce = await sauceModel.findOne({ _id: req.params.id });
-
-    console.log("req.file" + req.file);
     let sauce;
     if (req.file == undefined) {
       if (req.body.userId != userId) {
@@ -94,11 +74,9 @@ exports.updateSauce = async function (req, res) {
         description: req.body.description,
         mainPepper: req.body.mainPepper,
       });
-      console.log("error");
-      console.log(error);
+
       if (error != undefined) throw new Error("error");
 
-      console.log("id " + req.params.id);
       await sauceModel.updateOne(
         { _id: req.params.id },
         {
@@ -132,8 +110,7 @@ exports.updateSauce = async function (req, res) {
         description: sauce.description,
         mainPepper: sauce.mainPepper,
       });
-      console.log("error");
-      console.log(error);
+
       if (error != undefined) throw new Error("error");
 
       await sauceModel.updateOne(
@@ -153,7 +130,7 @@ exports.updateSauce = async function (req, res) {
         }
       );
     }
-    //console.log("sauce " + sauce);
+
     return res.status(200).json({ message: "sauce mise a jour" });
   } catch (error) {
     res.status(400).json({ error });
@@ -165,7 +142,6 @@ exports.deleteSauce = async function (req, res) {
     const token = req.headers.authorization.split(" ")[1];
     const decodedToken = jwt.verify(token);
     const userId = decodedToken.userId;
-    //console.log("T= " + token + " D= " + decodedToken + " U= " + userId);
 
     let sauce = await sauceModel.findOne({ _id: req.params.id });
     if (sauce.userId != userId) {
@@ -178,7 +154,6 @@ exports.deleteSauce = async function (req, res) {
 
     await sauceModel.deleteOne({ _id: req.params.id });
     res.status(200).json({ message: "sauce supprimée" });
-    //console.log(sauce);
   } catch (error) {
     res.status(400).json({ error });
   }
@@ -201,9 +176,6 @@ exports.setLike = async function (req, res) {
     let sauceId = req.params.id;
     let sauce = await sauceModel.findOne({ _id: sauceId });
 
-    //console.log(sauce);
-    //console.log(req.body.userId);
-    //console.log(sauce.usersLiked);
     let liked = sauce.usersLiked.indexOf(req.body.userId) != -1;
 
     let disliked = sauce.usersDisliked.indexOf(req.body.userId) != -1;
@@ -213,9 +185,8 @@ exports.setLike = async function (req, res) {
       await sauceModel.updateOne(
         { _id: sauceId },
         {
-          //...req.body,
           likes: sauce.likes - 1,
-          //usersLiked: sauce.usersLiked.splice(like, 1),
+
           $pull: { usersLiked: req.body.userId },
         }
       );
@@ -226,9 +197,8 @@ exports.setLike = async function (req, res) {
       await sauceModel.updateOne(
         { _id: sauceId },
         {
-          //...req.body,
           dislikes: sauce.dislikes - 1,
-          //usersDisliked: sauce.usersDisliked.splice(dislike, 1),
+
           $pull: { usersDisliked: req.body.userId },
         }
       );
@@ -239,9 +209,8 @@ exports.setLike = async function (req, res) {
       await sauceModel.updateOne(
         { _id: sauceId },
         {
-          //...req.body,
           likes: sauce.likes + 1,
-          //usersLiked: sauce.usersLiked.push(req.body.userId),
+
           $push: { usersLiked: req.body.userId },
         }
       );
@@ -252,14 +221,13 @@ exports.setLike = async function (req, res) {
       await sauceModel.updateOne(
         { _id: sauceId },
         {
-          //...req.body,
           dislikes: sauce.dislikes + 1,
-          //usersDisliked: sauce.usersDisliked.push(req.body.userId),
+
           $push: { usersDisliked: req.body.userId },
         }
       );
     }
-    //console.log(await sauceModel.findOne({ _id: req.params.id }));
+
     res.status(200).json({ message: "Like mis a jour" });
     return;
   } catch (error) {
