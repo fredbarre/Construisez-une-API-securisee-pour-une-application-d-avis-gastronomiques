@@ -7,6 +7,7 @@ if (!env.PORT) console.log("PORT should be set in .env");
 const { PORT = 3000 } = env;
 const jwt = require("../managers/jwt");
 let sauceModel = require("../models/sauceModel");
+let joischema = require("../managers/joivalidator");
 
 exports.getSauces = async function (req, res) {
   try {
@@ -36,91 +37,127 @@ exports.newSauce = function (req, res) {
   //if (req.auth._id != req.body.userId) {
   //  res.status(403).json({ error: "requete non autorisée" });
   //  return;
+  try {
+    const sauceObject = JSON.parse(req.body.sauce);
 
-  const sauceObject = JSON.parse(req.body.sauce);
-  console.log("sauceobject " + sauceObject);
-  console.log("req.file " + req.file);
-  delete sauceObject._id;
+    let { error, value } = joischema.validate({
+      name: sauceObject.name,
+      manufacturer: sauceObject.manufacturer,
+      description: sauceObject.description,
+      mainPepper: sauceObject.mainPepper,
+    });
+    console.log("error");
+    console.log(error);
+    if (error != undefined) throw new Error("error");
 
-  const sauce = new sauceModel({
-    ...sauceObject,
-    likes: 0,
-    dislikes: 0,
-    userLiked: [],
-    usersDisliked: [],
-    imageUrl: `http://localhost:${PORT}/` + req.file.filename,
-  });
+    console.log("sauceobject " + sauceObject);
+    console.log("req.file " + req.file);
+    delete sauceObject._id;
 
-  console.log("sauce " + sauce);
-  sauce
-    .save()
-    .then(() => res.status(201).json({ message: "sauce créé !" }))
-    .catch((error) => res.status(400).json({ error }));
+    const sauce = new sauceModel({
+      ...sauceObject,
+      likes: 0,
+      dislikes: 0,
+      userLiked: [],
+      usersDisliked: [],
+      imageUrl: `http://localhost:${PORT}/` + req.file.filename,
+    });
+
+    console.log("sauce " + sauce);
+    sauce.save();
+    return res.status(201).json({ message: "sauce créé !" });
+  } catch (error) {
+    res.status(400).json({ error });
+  }
 };
 
 exports.updateSauce = async function (req, res) {
-  const token = req.headers.authorization.split(" ")[1];
-  const decodedToken = jwt.verify(token);
-  const userId = decodedToken.userId;
-  //console.log("T= " + token + " D= " + decodedToken + " U= " + userId);
+  try {
+    const token = req.headers.authorization.split(" ")[1];
+    const decodedToken = jwt.verify(token);
+    const userId = decodedToken.userId;
+    //console.log("T= " + token + " D= " + decodedToken + " U= " + userId);
 
-  //sauce = req.file ? JSON.parse(req.body.sauce) : req.body.sauce;
-  //let sauce = await sauceModel.findOne({ _id: req.params.id });
+    //sauce = req.file ? JSON.parse(req.body.sauce) : req.body.sauce;
+    //let sauce = await sauceModel.findOne({ _id: req.params.id });
 
-  console.log("req.file" + req.file);
-  let sauce;
-  if (req.file == undefined) {
-    if (req.body.userId != userId) {
-      res.status(403).json({ error: "requete non autorisée" });
-      return;
-    }
-    console.log("id " + req.params.id);
-    await sauceModel.updateOne(
-      { _id: req.params.id },
-      {
-        userId: req.body.userId,
+    console.log("req.file" + req.file);
+    let sauce;
+    if (req.file == undefined) {
+      if (req.body.userId != userId) {
+        res.status(403).json({ error: "requete non autorisée" });
+        return;
+      }
+      let { error, value } = joischema.validate({
         name: req.body.name,
         manufacturer: req.body.manufacturer,
         description: req.body.description,
         mainPepper: req.body.mainPepper,
-        heat: req.body.heat,
-        likes: 0,
-        dislikes: 0,
-        userLiked: [],
-        usersDisliked: [],
+      });
+      console.log("error");
+      console.log(error);
+      if (error != undefined) throw new Error("error");
+
+      console.log("id " + req.params.id);
+      await sauceModel.updateOne(
+        { _id: req.params.id },
+        {
+          userId: req.body.userId,
+          name: req.body.name,
+          manufacturer: req.body.manufacturer,
+          description: req.body.description,
+          mainPepper: req.body.mainPepper,
+          heat: req.body.heat,
+          likes: 0,
+          dislikes: 0,
+          userLiked: [],
+          usersDisliked: [],
+        }
+      );
+    } else {
+      sauce = JSON.parse(req.body.sauce);
+      if (sauce.userId != userId) {
+        res.status(403).json({ error: "requete non autorisée" });
+        return;
       }
-    );
-  } else {
-    sauce = JSON.parse(req.body.sauce);
-    if (sauce.userId != userId) {
-      res.status(403).json({ error: "requete non autorisée" });
-      return;
-    }
-    let oldsauce = await sauceModel.findOne({ _id: req.params.id });
+      let oldsauce = await sauceModel.findOne({ _id: req.params.id });
 
-    let fileLink = oldsauce.imageUrl.split("/");
-    let fileName = fileLink[fileLink.length - 1];
-    await fsPromises.unlink("images/" + fileName);
+      let fileLink = oldsauce.imageUrl.split("/");
+      let fileName = fileLink[fileLink.length - 1];
+      await fsPromises.unlink("images/" + fileName);
 
-    await sauceModel.updateOne(
-      { _id: req.params.id },
-      {
-        userId: sauce.userId,
+      let { error, value } = joischema.validate({
         name: sauce.name,
         manufacturer: sauce.manufacturer,
         description: sauce.description,
         mainPepper: sauce.mainPepper,
-        heat: sauce.heat,
-        likes: 0,
-        dislikes: 0,
-        userLiked: [],
-        usersDisliked: [],
-        imageUrl: `http://localhost:${PORT}/` + req.file.filename,
-      }
-    );
+      });
+      console.log("error");
+      console.log(error);
+      if (error != undefined) throw new Error("error");
+
+      await sauceModel.updateOne(
+        { _id: req.params.id },
+        {
+          userId: sauce.userId,
+          name: sauce.name,
+          manufacturer: sauce.manufacturer,
+          description: sauce.description,
+          mainPepper: sauce.mainPepper,
+          heat: sauce.heat,
+          likes: 0,
+          dislikes: 0,
+          userLiked: [],
+          usersDisliked: [],
+          imageUrl: `http://localhost:${PORT}/` + req.file.filename,
+        }
+      );
+    }
+    //console.log("sauce " + sauce);
+    return res.status(200).json({ message: "sauce mise a jour" });
+  } catch (error) {
+    res.status(400).json({ error });
   }
-  //console.log("sauce " + sauce);
-  return res.status(200).json({ message: "sauce mise a jour" });
 };
 
 exports.deleteSauce = async function (req, res) {
