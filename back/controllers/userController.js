@@ -8,16 +8,24 @@ let env = require("../managers/env");
 if (!env.TOKENSECRET) console.log("TOKENSECRET must be set in .env");
 const { TOKENSECRET } = env;
 //const TOKENSECRET = process.env.TOKENSECRET;
+let joischema = require("../managers/joivalidator");
 
 exports.signup = async function (req, res) {
   try {
+    let { error, value } = joischema.validate({
+      email: req.body.email,
+      password: req.body.password,
+    });
+    console.log("error");
+    console.log(error);
+    if (error != undefined) throw new Error("error");
     let hash = await bcrypt.hash(req.body.password, 10);
 
     const user = new userModel({
       email: req.body.email,
       password: hash,
     });
-    user.save().catch((error) => res.status(400).json({ error }));
+    user.save(); ///.catch((error) => res.status(400).json({ error }));
     res.status(201).json({ message: "Utilisateur créé !" });
   } catch (error) {
     res.status(500).json({ error });
