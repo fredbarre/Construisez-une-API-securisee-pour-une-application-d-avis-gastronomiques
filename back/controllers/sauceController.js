@@ -65,7 +65,7 @@ exports.updateSauce = async function (req, res) {
     let sauce;
     if (req.file == undefined) {
       if (req.body.userId != userId) {
-        res.status(403).json({ error: "requete non autorisée" });
+        res.status(403).json({ error: "unauthorized request" });
         return;
       }
       let { error, value } = joischema.validate({
@@ -95,7 +95,7 @@ exports.updateSauce = async function (req, res) {
     } else {
       sauce = JSON.parse(req.body.sauce);
       if (sauce.userId != userId) {
-        res.status(403).json({ error: "requete non autorisée" });
+        res.status(403).json({ error: "unauthorized request" });
         return;
       }
       let oldsauce = await sauceModel.findOne({ _id: req.params.id });
@@ -145,7 +145,7 @@ exports.deleteSauce = async function (req, res) {
 
     let sauce = await sauceModel.findOne({ _id: req.params.id });
     if (sauce.userId != userId) {
-      res.status(403).json({ error: "requete non autorisée" });
+      res.status(403).json({ error: "unauthorized request" });
       return;
     }
     let fileLink = sauce.imageUrl.split("/");
@@ -172,7 +172,7 @@ exports.setLike = async function (req, res) {
     const decodedToken = jwt.verify(token);
     const userId = decodedToken.userId;
     if (userId != req.body.userId)
-      return res.status(403).json({ error: "requete non autorisée" });
+      return res.status(403).json({ error: "unauthorized request" });
     let sauceId = req.params.id;
     let sauce = await sauceModel.findOne({ _id: sauceId });
 
