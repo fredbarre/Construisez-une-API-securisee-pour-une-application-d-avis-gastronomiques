@@ -88,7 +88,7 @@ exports.updateSauce = async function (req, res) {
           heat: req.body.heat,
           likes: 0,
           dislikes: 0,
-          userLiked: [],
+          usersLiked: [],
           usersDisliked: [],
         }
       );
@@ -124,7 +124,7 @@ exports.updateSauce = async function (req, res) {
           heat: sauce.heat,
           likes: 0,
           dislikes: 0,
-          userLiked: [],
+          usersLiked: [],
           usersDisliked: [],
           imageUrl: `http://localhost:${PORT}/` + req.file.filename,
         }
