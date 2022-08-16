@@ -2,7 +2,7 @@
 
 **Version hébergée**: https://github.com/fredbarre/projet6
 
-a partir du dossier back ou racine
+**a partir du dossier back ou racine**
 **installation**:npm install
 
 **lancement du server**:npm start
