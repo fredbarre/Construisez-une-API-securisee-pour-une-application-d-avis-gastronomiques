@@ -58,10 +58,12 @@ exports.newSauce = function (req, res) {
 
 exports.updateSauce = async function (req, res) {
   try {
-    const token = req.headers.authorization.split(" ")[1];
+    //utiliser req.auth.userId obtenu a partir du middleware auth
+    /*const token = req.headers.authorization.split(" ")[1];
     const decodedToken = jwt.verify(token);
-    const userId = decodedToken.userId;
+    const userId = decodedToken.userId;*/
 
+    const userId = req.auth.userId;
     let sauce;
     if (req.file == undefined) {
       if (req.body.userId != userId) {
@@ -139,9 +141,12 @@ exports.updateSauce = async function (req, res) {
 
 exports.deleteSauce = async function (req, res) {
   try {
-    const token = req.headers.authorization.split(" ")[1];
+    //utiliser req.auth.userId obtenu a partir du middleware auth
+    /*const token = req.headers.authorization.split(" ")[1];
     const decodedToken = jwt.verify(token);
-    const userId = decodedToken.userId;
+    const userId = decodedToken.userId;*/
+
+    const userId = req.auth.userId;
 
     let sauce = await sauceModel.findOne({ _id: req.params.id });
     if (sauce.userId != userId) {
@@ -163,14 +168,15 @@ exports.setLike = async function (req, res) {
   try {
     let choice = req.body.like;
     console.log(choice);
-    if (!(choice == -1 || choice == 0 || choice == 1)) {
-      res.status(400).json({ error: "choix like dislike non valide" });
-      return;
-    }
+    if (!(choice == -1 || choice == 0 || choice == 1))
+      return res.status(400).json({ error: "choix like dislike non valide" });
 
-    const token = req.headers.authorization.split(" ")[1];
+    //utiliser req.auth.userId obtenu a partir du middleware auth
+    /*const token = req.headers.authorization.split(" ")[1];
     const decodedToken = jwt.verify(token);
-    const userId = decodedToken.userId;
+    const userId = decodedToken.userId;*/
+
+    const userId = req.auth.userId;
     if (userId != req.body.userId)
       return res.status(403).json({ error: "unauthorized request" });
     let sauceId = req.params.id;
@@ -180,8 +186,7 @@ exports.setLike = async function (req, res) {
 
     let disliked = sauce.usersDisliked.indexOf(req.body.userId) != -1;
     console.log("liked= " + liked + " disliked " + disliked);
-    if (liked) {
-      console.log("remove like");
+    if (liked)
       await sauceModel.updateOne(
         { _id: sauceId },
         {
@@ -190,10 +195,8 @@ exports.setLike = async function (req, res) {
           $pull: { usersLiked: req.body.userId },
         }
       );
-    }
 
-    if (disliked) {
-      console.log("remove dislike");
+    if (disliked)
       await sauceModel.updateOne(
         { _id: sauceId },
         {
@@ -202,10 +205,8 @@ exports.setLike = async function (req, res) {
           $pull: { usersDisliked: req.body.userId },
         }
       );
-    }
 
-    if (choice == 1) {
-      console.log("add like");
+    if (choice == 1)
       await sauceModel.updateOne(
         { _id: sauceId },
         {
@@ -214,10 +215,8 @@ exports.setLike = async function (req, res) {
           $push: { usersLiked: req.body.userId },
         }
       );
-    }
 
-    if (choice == -1) {
-      console.log("add dislike");
+    if (choice == -1)
       await sauceModel.updateOne(
         { _id: sauceId },
         {
@@ -226,10 +225,8 @@ exports.setLike = async function (req, res) {
           $push: { usersDisliked: req.body.userId },
         }
       );
-    }
 
-    res.status(200).json({ message: "Like mis a jour" });
-    return;
+    return res.status(200).json({ message: "Like mis a jour" });
   } catch (error) {
     res.status(400).json({ error });
   }
