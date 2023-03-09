@@ -1,6 +1,6 @@
 # projet6 : Construisez une API sécurisée pour une application d'avis gastronomiques
 
-**Version hébergée**: https://github.com/fredbarre/projet6
+**Code source**: https://github.com/fredbarre/Construisez-une-API-securisee-pour-une-application-d-avis-gastronomiques
 
 **a partir du dossier back ou racine**
 
